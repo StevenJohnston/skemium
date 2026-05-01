@@ -13,7 +13,7 @@
 
 | Command | Purpose |
 |---------|---------|
-| `generate` | Connects to a PostgreSQL database, extracts table schemas, converts to Avro, saves to directory |
+| `generate` | Connects to a PostgreSQL or MySQL database, extracts table schemas, converts to Avro, saves to directory |
 | `compare` | Compares two directories of generated Avro schemas for compatibility |
 | `compare-files` | Compares two individual `.avsc` files for compatibility (supports external type resolution via `--include-schema`) |
 
@@ -75,10 +75,12 @@ src/main/java/io/snyk/skemium/
 ├── cli/
 │   └── ManifestReader.java          # Reads JAR MANIFEST.MF for version info (singleton pattern)
 ├── db/
-│   ├── DatabaseKind.java            # Enum of supported DBs (currently only POSTGRES)
+│   ├── DatabaseKind.java            # Enum of supported DBs (POSTGRES, MYSQL)
 │   ├── TableSchemaFetcher.java      # Interface for fetching table schemas (extends AutoCloseable)
 │   ├── CatalogSchemaAndTableTopicNamingStrategy.java  # Topic naming: <catalog>.<schema>.<table>
-│   └── postgres/
+│   ├── mysql/                       # MySQL implementation
+│   │   └── MySqlTableSchemaFetcher.java     # MySQL implementation
+│   └── postgres/                    # PostgreSQL implementation
 │       ├── PostgresTableSchemaFetcher.java  # PostgreSQL implementation
 │       └── PostgresSchemaRefreshable.java   # Package-local wrapper exposing hidden Debezium refresh()
 ├── helpers/
@@ -90,16 +92,21 @@ src/main/java/io/snyk/skemium/
     └── MetadataFile.java            # `.skemium.meta.json` metadata record
 
 src/test/java/io/snyk/skemium/
+├── WithMySqlContainer.java          # Base class for tests needing MySQL (Testcontainers)
 ├── WithPostgresContainer.java       # Base class for tests needing PostgreSQL (Testcontainers)
 ├── TestHelper.java                  # Test utilities (defines RESOURCES path constant)
-├── GenerateCommandTest.java         # Integration tests for `generate`
-├── CompareCommandTest.java          # Integration tests for `compare` + CI mode
+├── GenerateCommandMySqlTest.java    # Integration tests for `generate` with MySQL
+├── GenerateCommandPostgresTest.java # Integration tests for `generate` with PostgreSQL
+├── CompareCommandMySqlTest.java     # Integration tests for `compare` with MySQL
+├── CompareCommandPostgresTest.java  # Integration tests for `compare` + CI mode with PostgreSQL
 ├── CompareFilesCommandTest.java     # Tests for `compare-files` + CI mode + --include-schema
 ├── CompareFilesResultTest.java      # Unit tests for compare-files result logic + multi-schema
 ├── avro/TableAvroSchemasTest.java   # Tests for Avro schema handling
 ├── helpers/SchemaRegistryTest.java  # Tests for compatibility checking
 ├── meta/MetadataFileTest.java       # Tests for metadata serialization
-└── db/postgres/                     # PostgreSQL-specific tests
+└── db/
+    ├── mysql/                       # MySQL-specific tests
+    └── postgres/                    # PostgreSQL-specific tests
 
 src/test/resources/
 ├── db_schema/chinook.initdb.sql     # Test fixture: Chinook sample database
@@ -187,8 +194,8 @@ Generated schema files follow the pattern: `DB_NAME.DB_SCHEMA.DB_TABLE.EXTENSION
 ### Framework
 
 - **JUnit 5** (Jupiter) with `junit-jupiter-api` and `junit-jupiter-params`
-- **Testcontainers** for PostgreSQL integration tests — requires **Docker running**
-- Tests that need a database extend `WithPostgresContainer`, which manages a PostgreSQL 17.2 container with the Chinook sample database
+- **Testcontainers** for database integration tests — requires **Docker running**
+- Tests that need a database extend either `WithPostgresContainer` or `WithMySqlContainer`
 
 ### Test Fixture Database
 
@@ -205,7 +212,7 @@ Schema change test scenarios are in `src/test/resources/schema_change-*/` with `
 
 Two test methods regenerate Avro schema files from Java record annotations:
 
-- `CompareCommandTest.refreshCompareResultFileSchema()` → writes `schemas/skemium.compare.result.avsc`
+- `CompareCommandPostgresTest.refreshCompareResultFileSchema()` → writes `schemas/skemium.compare.result.avsc`
 - `CompareFilesCommandTest.refreshSchemaComparisonResultFileSchema()` → writes `schemas/skemium.compare-files.result.avsc`
 
 These call `Avro.saveAvroSchemaForType()` which generates schemas from `@JsonProperty`-annotated record classes. **CI checks for uncommitted changes after tests** via `git diff --exit-code`, so if schema files change, they must be committed.
@@ -214,6 +221,7 @@ These call `Avro.saveAvroSchemaForType()` which generates schemas from `@JsonPro
 
 - `TestHelper.RESOURCES` — `Path.of("src", "test", "resources")` constant for locating test fixtures
 - `WithPostgresContainer.createPostgresContainerConfiguration()` — creates a Debezium `Configuration` for the test container
+- `WithMySqlContainer.createMySqlContainerConfiguration()` — creates a Debezium `Configuration` for the test container
 
 ### Running Tests
 
@@ -244,7 +252,7 @@ Dependabot is configured (`.github/dependabot.yml`) for automated dependency upd
 
 | Library | Purpose |
 |---------|---------|
-| `debezium-core` + `debezium-connector-postgres` | Database schema extraction |
+| `debezium-core` + `debezium-connector-{postgres,mysql}` | Database schema extraction |
 | `kafka-connect-avro-converter` (Confluent) | Avro schema conversion and compatibility checking |
 | `picocli` + `picocli-codegen` | CLI framework + annotation processing |
 | `jackson-*` (core, databind, annotations, jsr310, avro) | JSON/Avro serialization |
@@ -253,7 +261,7 @@ Dependabot is configured (`.github/dependabot.yml`) for automated dependency upd
 | `commons-compress` | Transitive/compression support |
 | `commons-lang3` | String/object utilities |
 | `guava` (transitive via Confluent) | `Sets.difference()` for table comparison |
-| `testcontainers` | PostgreSQL test containers |
+| `testcontainers` | PostgreSQL and MySQL test containers |
 
 ### Confluent Repository
 
@@ -315,7 +323,7 @@ git push origin main --follow-tags --tags      # Push tag triggers release workf
 
 4. **`TOPIC_PREFIX` is required but unused**: When creating Debezium configurations, `TOPIC_PREFIX` must be set even though Skemium doesn't actually produce to Kafka. See `GenerateCommand.java:217`.
 
-5. **Only PostgreSQL is supported**: The `DatabaseKind` enum and `TableSchemaFetcher` interface are designed for multiple database types, but only `POSTGRES` is implemented.
+5. **Multiple databases supported**: The `DatabaseKind` enum and `TableSchemaFetcher` interface support multiple database types. `POSTGRES` and `MYSQL` are currently implemented.
 
 6. **GraalVM needed for native builds only**: Regular development uses AdoptOpenJDK 21. Switch to GraalVM (uncomment in `.tool-versions`) only when building native binaries.
 
@@ -331,7 +339,7 @@ git push origin main --follow-tags --tags      # Push tag triggers release workf
 
 12. **Topic naming strategy**: `CatalogSchemaAndTableTopicNamingStrategy` formats topics as `<catalog>.<schema>.<table>` (e.g., `chinook.public.artist`). This naming is also used as the table identifier (`TableAvroSchemas.identifier()`).
 
-13. **Tests mutate the database**: `CompareCommandTest` runs `ALTER TABLE` statements against the Testcontainers PostgreSQL instance to test schema change detection. These changes persist within the container's lifecycle, so test ordering may matter if tests share the same container.
+13. **Tests mutate the database**: `CompareCommandPostgresTest` runs `ALTER TABLE` statements against the Testcontainers PostgreSQL instance to test schema change detection. These changes persist within the container's lifecycle, so test ordering may matter if tests share the same container.
 
 14. **Case-insensitive enum parsing**: `SkemiumMain` configures Picocli with `.setCaseInsensitiveEnumValuesAllowed(true)`, so CLI enum options like `--compatibility` accept any case.
 

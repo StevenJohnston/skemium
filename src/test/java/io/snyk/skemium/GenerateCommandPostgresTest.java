@@ -18,7 +18,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GenerateCommandTest extends WithPostgresContainer {
+public class GenerateCommandPostgresTest extends WithPostgresContainer {
     Path TEMP_DIR;
 
     @BeforeEach

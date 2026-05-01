@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class CompareCommandTest extends WithPostgresContainer {
+class CompareCommandPostgresTest extends WithPostgresContainer {
     Path CURR_DIR;
     Path NEXT_DIR;
     Path OUTPUT_FILE;

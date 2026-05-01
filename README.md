@@ -193,7 +193,7 @@ Options:
   -d, --database=<dbName>     Database name (env: DB_NAME)
   -h, --hostname=<hostname>   Database hostname (env: DB_HOSTNAME)
       --kind=<kind>           Database kind (env: DB_KIND - optional)
-                                Values: POSTGRES
+                                Values: POSTGRES, MYSQL
                                 Default: POSTGRES
   -p, --port=<port>           Database port (env: DB_PORT)
       --password=<password>   Database password (env: DB_PASSWORD)
@@ -449,7 +449,7 @@ The schema for this file is at [<prj_root>/schemas/skemium.compare-files.result.
 
 Here are some major features that we haven't had time to tackle yet:
 
-* [ ] Support for additional Databases (MySQL, MariaDB, MongoDB, Oracle, SQL Server, ...): currently only PostgreSQL is supported
+* [ ] Support for additional Databases (MariaDB, MongoDB, Oracle, SQL Server, ...): currently PostgreSQL and MySQL are supported
 * [ ] Support connecting to GCP CloudSQL databases via
   [dedicated `SocketFactory`](https://github.com/GoogleCloudPlatform/cloud-sql-jdbc-socket-factory)
 * [ ] Support custom key definition for a table, similar to what

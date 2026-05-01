@@ -1,6 +1,7 @@
 package io.snyk.skemium.db;
 
 import io.debezium.config.Configuration;
+import io.snyk.skemium.db.mysql.MySqlTableSchemaFetcher;
 import io.snyk.skemium.db.postgres.PostgresTableSchemaFetcher;
 
 /**
@@ -11,7 +12,13 @@ public enum DatabaseKind {
      * PostgreSQL.
      * {@see https://www.postgresql.org/}
      */
-    POSTGRES;
+    POSTGRES,
+
+    /**
+     * MySQL.
+     * {@see https://www.mysql.com/}
+     */
+    MYSQL;
 
     /**
      * Creates the {@link TableSchemaFetcher} for the given {@link DatabaseKind}.
@@ -22,6 +29,7 @@ public enum DatabaseKind {
     public TableSchemaFetcher fetcher(final Configuration config) {
         return switch (this) {
             case POSTGRES -> new PostgresTableSchemaFetcher(config);
+            case MYSQL -> new MySqlTableSchemaFetcher(config);
         };
     }
 }

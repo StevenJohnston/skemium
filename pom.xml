@@ -68,11 +68,13 @@
     <ver.lz4-java>1.10.4</ver.lz4-java>
     <ver.picocli>4.7.7</ver.picocli>
     <ver.postgresql>42.7.10</ver.postgresql>
+    <ver.mysql>8.0.33</ver.mysql>
     <ver.slf4j>2.0.17</ver.slf4j>
 
     <!-- Test deps -->
     <ver.junit-jupiter>5.14.3</ver.junit-jupiter>
     <ver.testcontainers.postgresql>1.21.4</ver.testcontainers.postgresql>
+    <ver.testcontainers.mysql>1.21.4</ver.testcontainers.mysql>
 
     <!-- Maven deps -->
     <ver.maven-assembly>3.8.0</ver.maven-assembly>
@@ -147,12 +149,24 @@
       <artifactId>debezium-connector-postgres</artifactId>
       <version>${ver.debezium}</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/io.debezium/debezium-connector-mysql -->
+    <dependency>
+      <groupId>io.debezium</groupId>
+      <artifactId>debezium-connector-mysql</artifactId>
+      <version>${ver.debezium}</version>
+    </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>${ver.postgresql}</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>${ver.mysql}</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
@@ -250,6 +264,13 @@
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
       <version>${ver.testcontainers.postgresql}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.testcontainers/mysql -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>mysql</artifactId>
+      <version>${ver.testcontainers.mysql}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

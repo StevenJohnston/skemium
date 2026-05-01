@@ -9,6 +9,24 @@
     "allPublicFields" : true
   },
   {
+    "name" : "io.debezium.connector.mysql.MySqlSourceInfoStructMaker",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true
+  },
+  {
+    "name" : "io.debezium.relational.history.MemorySchemaHistory",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true
+  },
+  {
     "name": "io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
